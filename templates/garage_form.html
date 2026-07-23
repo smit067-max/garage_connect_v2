@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Register Your Garage{% endblock %}
+{% block content %}
+<div class="container">
+    <h2>Register Your Garage</h2>
+    <div class="card">
+        <form action="{{ url_for('register_garage') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-group">
+                <label>Garage Name</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Address</label>
+                <textarea name="address" class="form-control" rows="2" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>City</label>
+                <select name="city" class="form-control" required>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Gurugram">Gurugram</option>
+                    <option value="Bangalore">Bangalore</option>
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="Pune">Pune</option>
+                    <option value="Hyderabad">Hyderabad</option>
+                    <option value="Chennai">Chennai</option>
+                    <option value="Kolkata">Kolkata</option>
+                    <option value="Jaipur">Jaipur</option>
+                    <option value="Ahmedabad">Ahmedabad</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" name="phone" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Services Offered</label>
+                <div class="grid-3">
+                    <label><input type="checkbox" name="services" value="Oil Change"> Oil Change</label>
+                    <label><input type="checkbox" name="services" value="Brake Repair"> Brake Repair</label>
+                    <label><input type="checkbox" name="services" value="Battery Replacement"> Battery Replacement</label>
+                    <label><input type="checkbox" name="services" value="AC Repair"> AC Repair</label>
+                    <label><input type="checkbox" name="services" value="Engine Repair"> Engine Repair</label>
+                    <label><input type="checkbox" name="services" value="Clutch Repair"> Clutch Repair</label>
+                    <label><input type="checkbox" name="services" value="Suspension Repair"> Suspension Repair</label>
+                    <label><input type="checkbox" name="services" value="Electrical Repair"> Electrical Repair</label>
+                    <label><input type="checkbox" name="services" value="Tyre Replacement"> Tyre Replacement</label>
+                    <label><input type="checkbox" name="services" value="Body Repair"> Body Repair</label>
+                    <label><input type="checkbox" name="services" value="Transmission Repair"> Transmission Repair</label>
+                    <label><input type="checkbox" name="services" value="Radiator Repair"> Radiator Repair</label>
+                </div>
+            </div>
+            
+            <div class="form-group grid-2">
+                <div>
+                    <label>Open Time</label>
+                    <input type="time" name="open_time" class="form-control" required>
+                </div>
+                <div>
+                    <label>Close Time</label>
+                    <input type="time" name="close_time" class="form-control" required>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-primary">Submit for Approval</button>
+            <p class="form-text text-muted" style="margin-top: 10px;">Note: Your garage will be reviewed by admin before appearing on the platform.</p>
+        </form>
+    </div>
+</div>
+{% endblock %}

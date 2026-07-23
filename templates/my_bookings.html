@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookings - GarageConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header mb-4" style="display: flex; justify-content: space-between; align-items: center;">
+        <h1 class="mb-0">My Bookings</h1>
+        <span style="background: #007bff; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold;">{{ bookings|length }} Bookings</span>
+    </div>
+
+    <div class="tabs mb-4" style="display: flex; border-bottom: 2px solid #e9ecef; gap: 30px;">
+        <button class="tab-btn active pb-3" data-target="All" style="background:none; border:none; border-bottom: 3px solid #007bff; font-weight:bold; cursor:pointer; font-size: 1.1rem; color: #333; margin-bottom: -2px;">All</button>
+        <button class="tab-btn pb-3" data-target="Active" style="background:none; border:none; cursor:pointer; font-size: 1.1rem; color:#6c757d; margin-bottom: -2px;">Active</button>
+        <button class="tab-btn pb-3" data-target="Completed" style="background:none; border:none; cursor:pointer; font-size: 1.1rem; color:#6c757d; margin-bottom: -2px;">Completed</button>
+        <button class="tab-btn pb-3" data-target="Cancelled" style="background:none; border:none; cursor:pointer; font-size: 1.1rem; color:#6c757d; margin-bottom: -2px;">Cancelled</button>
+    </div>
+
+    {% if bookings %}
+    <div class="bookings-list" style="display: flex; flex-direction: column; gap: 20px;">
+        {% for booking in bookings %}
+        <div class="card booking-card p-4" data-status="{% if booking.status in ['Pending', 'Accepted', 'In Progress'] %}Active{% else %}{{ booking.status }}{% endif %}">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+                <h3 class="mb-0 font-weight-bold" style="color: #333;">{{ booking.service_type }}</h3>
+                <span class="badge-{{ booking.status|lower|replace(' ', '-') }}" style="padding: 6px 15px; border-radius: 20px; font-weight:bold; font-size: 0.9rem;">
+                    {{ booking.status }}
+                </span>
+            </div>
+            
+            <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
+                <div>
+                    <p class="mb-2 text-muted"><i class="fa fa-car" style="width: 25px;"></i> <strong style="color: #333;">{{ booking.make }} {{ booking.model }}</strong> {{ booking.year }}</p>
+                    <p class="mb-2 text-muted"><i class="fa fa-id-card" style="width: 25px;"></i> {{ booking.registration_number }}</p>
+                    <p class="mb-2 text-muted"><i class="fa fa-calendar-alt" style="width: 25px;"></i> Scheduled: <strong style="color: #333;">{{ booking.scheduled_date }}</strong></p>
+                </div>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <p class="mb-2"><strong>Garage:</strong> <a href="{{ url_for('garage_detail', id=booking.garage._id) }}" style="text-decoration: none;">{{ booking.garage.name }}</a></p>
+                    <p class="mb-0 text-muted text-sm"><i class="fa fa-map-marker-alt"></i> {{ booking.garage.address }}, {{ booking.garage.city }}</p>
+                </div>
+            </div>
+
+            {% if booking.status == 'Completed' %}
+            <div class="completed-details p-3 mb-3" style="background: #fdfdfd; border: 1px solid #e9ecef; border-radius: 8px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center;">
+                    <div>
+                        <span class="text-muted text-sm d-block mb-1">Labour</span>
+                        <strong>₹{{ booking.labour_price|default(0) }}</strong>
+                    </div>
+                    <div style="border-left: 1px solid #eee; border-right: 1px solid #eee;">
+                        <span class="text-muted text-sm d-block mb-1">Parts</span>
+                        <strong>₹{{ booking.parts_total|default(0) }}</strong>
+                    </div>
+                    <div>
+                        <span class="text-muted text-sm d-block mb-1">Total Paid</span>
+                        <strong class="text-primary" style="font-size: 1.1rem;">₹{{ booking.total_price|default(0) }}</strong>
+                    </div>
+                </div>
+                
+                {% if booking.parts_used %}
+                <div class="mt-3 pt-3" style="border-top: 1px dashed #eee;">
+                    <span class="text-muted text-sm d-block mb-2">Parts Replaced/Used:</span>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        {% for part in booking.parts_used %}
+                        <span style="background: #e9ecef; color: #495057; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem;">{{ part }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="review-section mt-4 pt-3" style="border-top: 1px solid #eee;">
+                {% if booking.review %}
+                <div class="existing-review" style="background: #fff8e1; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <p class="mb-0 font-weight-bold">Your Review</p>
+                        <div class="stars text-warning" style="color: #ffc107;">
+                            {% for i in range(5) %}
+                                {% if i < booking.review.rating|int %}★{% else %}☆{% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="mb-0 text-muted" style="font-style: italic;">"{{ booking.review.comment }}"</p>
+                </div>
+                {% else %}
+                <button class="btn-ghost toggle-review-btn" onclick="toggleReviewForm('review-form-{{ booking._id }}')" style="background: none; border: 1px solid #007bff; color: #007bff; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">
+                    ⭐ Rate This Service
+                </button>
+                <div id="review-form-{{ booking._id }}" class="review-form mt-3" style="display: none; background:#f8f9fa; border:1px solid #ddd; padding:20px; border-radius:8px;">
+                    <form method="POST" action="{{ url_for('submit_review', booking_id=booking._id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="rating" id="rating-{{ booking._id }}" value="5">
+                        
+                        <div class="form-group mb-4 text-center">
+                            <label class="d-block mb-2 font-weight-bold">How was your experience?</label>
+                            <div class="star-selector" data-target="rating-{{ booking._id }}" style="font-size: 2.5rem; cursor: pointer; color: #ffc107; display: inline-block;">
+                                <span data-value="1">★</span>
+                                <span data-value="2">★</span>
+                                <span data-value="3">★</span>
+                                <span data-value="4">★</span>
+                                <span data-value="5">★</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <textarea name="comment" class="form-control" rows="3" style="width: 100%; padding: 10px; resize: vertical;" placeholder="Tell us about the service quality, staff behaviour, etc..." required></textarea>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                            <button type="button" class="btn-ghost" onclick="toggleReviewForm('review-form-{{ booking._id }}')" style="padding: 8px 15px; border: none; background: none; color: #6c757d; cursor: pointer;">Cancel</button>
+                            <button type="submit" class="btn-primary" style="padding: 8px 20px;">Submit Review</button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state text-center card p-5 mt-4">
+        <div class="illustration mb-4" style="font-size: 4rem;">📅</div>
+        <h3>No bookings yet</h3>
+        <p class="text-muted mb-4">You haven't booked any repairs yet.</p>
+        <a href="{{ url_for('garages') }}" class="btn-primary" style="padding: 10px 25px; font-weight: bold;">Browse Garages</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .badge-pending { background-color: #ffc107; color: #333; }
+    .badge-accepted { background-color: #17a2b8; color: white; }
+    .badge-in-progress { background-color: #007bff; color: white; }
+    .badge-completed { background-color: #28a745; color: white; }
+    .badge-cancelled { background-color: #dc3545; color: white; }
+</style>
+
+<script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.style.borderBottom = 'none';
+                b.style.fontWeight = 'normal';
+                b.style.color = '#6c757d';
+            });
+            this.style.borderBottom = '3px solid #007bff';
+            this.style.fontWeight = 'bold';
+            this.style.color = '#333';
+            
+            const target = this.getAttribute('data-target');
+            document.querySelectorAll('.booking-card').forEach(card => {
+                if(target === 'All' || card.getAttribute('data-status') === target) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    function toggleReviewForm(formId) {
+        const form = document.getElementById(formId);
+        if(form.style.display === 'none') {
+            form.style.display = 'block';
+        } else {
+            form.style.display = 'none';
+        }
+    }
+
+    document.querySelectorAll('.star-selector').forEach(selector => {
+        const stars = selector.querySelectorAll('span');
+        const hiddenInput = document.getElementById(selector.getAttribute('data-target'));
+        
+        stars.forEach((star, index) => {
+            star.addEventListener('click', () => {
+                const value = index + 1;
+                hiddenInput.value = value;
+                
+                stars.forEach((s, i) => {
+                    if (i < value) {
+                        s.textContent = '★';
+                    } else {
+                        s.textContent = '☆';
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

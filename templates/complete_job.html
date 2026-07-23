@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Complete Job #{{ booking._id|string|truncate(8, true, '') }}{% endblock %}
+{% block content %}
+<div class="container">
+    <h2>Complete Job #{{ booking._id|string|truncate(8, true, '') }}</h2>
+    
+    <div class="card" style="margin-bottom: 20px;">
+        <h3>Job Summary</h3>
+        <p><strong>Customer:</strong> {{ booking.customer.name }}</p>
+        <p><strong>Vehicle:</strong> {{ booking.vehicle.make }} {{ booking.vehicle.model }} ({{ booking.vehicle.year }})</p>
+        <p><strong>Service:</strong> {{ booking.service_type }}</p>
+        <p><strong>Problem:</strong> {{ booking.problem_description }}</p>
+        {% if booking.ai_diagnosis %}
+        <div style="background-color: #f8f9fa; padding: 10px; border-left: 4px solid #17a2b8; margin-top: 10px;">
+            <p><strong>AI Diagnosis:</strong> {{ booking.ai_diagnosis.predicted_service }}</p>
+            <p><strong>Confidence:</strong> {{ booking.ai_diagnosis.confidence }}</p>
+            <p><strong>Urgency:</strong> {{ booking.ai_diagnosis.urgency }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <form action="{{ url_for('complete_booking', id=booking._id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="card" style="margin-bottom: 20px;">
+            <h3>Select Parts Used</h3>
+            {% if inventory_items %}
+                {% for item in inventory_items %}
+                <div class="form-group" data-price="{{ item.unit_price }}" style="display: flex; align-items: center; gap: 10px;">
+                    <label style="flex: 1;">
+                        <input type="checkbox" name="parts[]" value="{{ item._id }}" class="part-checkbox">
+                        {{ item.name }} (Available: {{ item.quantity }}) - &#8377;{{ item.unit_price }}
+                    </label>
+                    <input type="number" name="quantities[]" min="1" max="{{ item.quantity }}" class="form-control part-quantity" style="width: 100px; display: none;" placeholder="Qty">
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No parts in inventory. <a href="{{ url_for('inventory') }}">Add parts from Inventory page.</a></p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h3>Pricing</h3>
+            <div class="form-group">
+                <label>Labour Price (&#8377;)</label>
+                <input type="number" name="labour_price" id="labour-price" class="form-control" required min="0">
+            </div>
+            
+            <div class="form-group">
+                <label>Parts Total (&#8377;)</label>
+                <input type="text" id="parts-total" class="form-control" readonly value="0">
+            </div>
+            
+            <div class="form-group">
+                <label>Total Price (&#8377;)</label>
+                <input type="text" id="total-price" class="form-control" readonly value="0">
+            </div>
+            
+            <div class="form-group">
+                <label>Commission Amount (&#8377;)</label>
+                <input type="text" id="commission-amount" class="form-control" readonly value="0">
+                <small class="form-text text-muted">Commission rate is {{ (garage.commission_rate * 100)|round(2) }}%</small>
+            </div>
+            
+            <button type="submit" class="btn-primary">Mark as Completed</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    const commissionRate = {{ garage.commission_rate|default(0.1) }};
+    const checkboxes = document.querySelectorAll('.part-checkbox');
+    const quantities = document.querySelectorAll('.part-quantity');
+    const labourInput = document.getElementById('labour-price');
+    const partsTotalInput = document.getElementById('parts-total');
+    const totalPriceInput = document.getElementById('total-price');
+    const commissionInput = document.getElementById('commission-amount');
+
+    function calculateTotal() {
+        let partsTotal = 0;
+        document.querySelectorAll('.part-checkbox:checked').forEach(cb => {
+            const row = cb.closest('.form-group');
+            const qtyInput = row.querySelector('.part-quantity');
+            const price = parseFloat(row.dataset.price);
+            const qty = parseFloat(qtyInput.value) || 0;
+            partsTotal += price * qty;
+        });
+
+        const labourTotal = parseFloat(labourInput.value) || 0;
+        const finalTotal = partsTotal + labourTotal;
+        const commission = finalTotal * commissionRate;
+
+        partsTotalInput.value = partsTotal.toFixed(2);
+        totalPriceInput.value = finalTotal.toFixed(2);
+        commissionInput.value = commission.toFixed(2);
+    }
+
+    checkboxes.forEach((cb, index) => {
+        cb.addEventListener('change', (e) => {
+            const qtyInput = quantities[index];
+            qtyInput.style.display = e.target.checked ? 'block' : 'none';
+            if (!e.target.checked) qtyInput.value = '';
+            calculateTotal();
+        });
+    });
+
+    quantities.forEach(qty => qty.addEventListener('input', calculateTotal));
+    labourInput.addEventListener('input', calculateTotal);
+</script>
+{% endblock %}

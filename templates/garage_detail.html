@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ garage.name }} - GarageConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="mb-4">
+        <a href="{{ url_for('garages') }}" class="text-decoration-none text-muted">← Back to Garages</a>
+    </div>
+
+    <div class="card mb-5 p-5">
+        <div class="flex-between align-items-start" style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h1 class="mb-2">{{ garage.name }}</h1>
+                <div class="stars mb-3" style="font-size: 1.2rem;">
+                    <span class="text-warning" style="color: #ffc107;">★ {{ garage.rating|default('0.0') }}</span> 
+                    <span class="text-muted text-sm">({{ garage.review_count|default(0) }} reviews)</span>
+                </div>
+                <p class="text-muted mb-2"><i class="fa fa-map-marker-alt" style="width: 20px;"></i> {{ garage.address }}, {{ garage.city }}</p>
+                <p class="text-muted mb-2"><i class="fa fa-phone" style="width: 20px;"></i> {{ garage.phone }}</p>
+                <p class="text-muted mb-3"><i class="fa fa-clock" style="width: 20px;"></i> {{ garage.operating_hours|default('9:00 AM - 6:00 PM') }}</p>
+                <p class="text-sm">
+                    <span class="badge-ghost px-2 py-1" style="border: 1px solid #ddd; border-radius: 4px;">Commission Rate: {{ garage.commission_rate|default('10%') }}</span>
+                </p>
+            </div>
+            <div>
+                <a href="{{ url_for('book_repair', garage_id=garage._id) }}" class="btn-primary" style="padding: 15px 30px; font-size: 1.1rem;">Book a Repair</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-5">
+        <h2 class="mb-4">Services Offered</h2>
+        <div class="card p-4">
+            <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                {% for service in garage.services %}
+                <span class="badge-primary px-3 py-2" style="border-radius: 20px; font-size: 1rem; background: #007bff; color: white;">{{ service }}</span>
+                {% else %}
+                <p class="text-muted mb-0">No specific services listed.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h2 class="mb-4">Customer Reviews <span class="text-warning" style="font-size: 1.2rem; color: #ffc107;">★ {{ garage.rating|default('0.0') }}</span></h2>
+        
+        {% if reviews %}
+        <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            {% for review in reviews %}
+            <div class="card p-4">
+                <div class="flex-between mb-2" style="display: flex; justify-content: space-between;">
+                    <strong>{{ review.customer_name }}</strong>
+                    <span class="text-muted text-sm">{{ review.date }}</span>
+                </div>
+                <div class="stars mb-3 text-warning" style="color: #ffc107;">
+                    {% for i in range(5) %}
+                        {% if i < review.rating|int %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                </div>
+                <p class="mb-0 text-dark">{{ review.comment }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state text-center card p-5">
+            <p class="text-muted mb-0" style="font-size: 1.1rem;">No reviews yet for this garage.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Analytics Dashboard - {{ garage.name }}{% endblock %}
+{% block content %}
+<div class="container">
+    <h2>Analytics Dashboard - {{ garage.name }}</h2>
+
+    <div class="period-filter" style="position: sticky; top: 0; background: white; padding: 10px 0; z-index: 100;">
+        <button class="period-btn btn-secondary active" data-period="30d">Last 30 Days</button>
+        <button class="period-btn btn-secondary" data-period="3m">3 Months</button>
+        <button class="period-btn btn-secondary" data-period="1y">1 Year</button>
+        <button class="period-btn btn-secondary" data-period="5y">5 Years</button>
+        <button class="period-btn btn-secondary" data-period="all">All Time</button>
+    </div>
+
+    <div class="analytics-grid grid-3">
+        <div class="kpi-card" id="kpi-revenue">
+            <i class="fa fa-rupee-sign"></i>
+            <span class="kpi-value">0</span>
+            <span class="kpi-label">Total Revenue</span>
+        </div>
+        <div class="kpi-card" id="kpi-profit">
+            <i class="fa fa-chart-line"></i>
+            <span class="kpi-value">0</span>
+            <span class="kpi-label">Total Profit</span>
+        </div>
+        <div class="kpi-card" id="kpi-jobs">
+            <i class="fa fa-check-double"></i>
+            <span class="kpi-value">0</span>
+            <span class="kpi-label">Jobs Completed</span>
+        </div>
+        <div class="kpi-card" id="kpi-avg-value">
+            <i class="fa fa-calculator"></i>
+            <span class="kpi-value">0</span>
+            <span class="kpi-label">Avg Job Value</span>
+        </div>
+        <div class="kpi-card" id="kpi-repeat">
+            <i class="fa fa-users"></i>
+            <span class="kpi-value">0</span>
+            <span class="kpi-label">Repeat Customers</span>
+        </div>
+        <div class="kpi-card" id="kpi-rating">
+            <i class="fa fa-star"></i>
+            <span class="kpi-value">0</span>
+            <span class="kpi-label">Avg Rating</span>
+        </div>
+    </div>
+
+    <div class="grid-2" style="margin-top: 20px;">
+        <div class="chart-container card">
+            <h3>Revenue Trend</h3>
+            <canvas id="revenueChart"></canvas>
+        </div>
+        <div class="chart-container card">
+            <h3>Profit vs Revenue</h3>
+            <canvas id="profitChart"></canvas>
+        </div>
+        <div class="chart-container card">
+            <h3>Jobs by Service</h3>
+            <canvas id="serviceChart"></canvas>
+        </div>
+        <div class="chart-container card">
+            <h3>Revenue by Service</h3>
+            <canvas id="serviceRevenueChart"></canvas>
+        </div>
+        <div class="chart-container card">
+            <h3>Monthly Comparison</h3>
+            <canvas id="comparisonChart"></canvas>
+        </div>
+        <div class="chart-container card">
+            <h3>Customer Stats</h3>
+            <canvas id="customerChart"></canvas>
+        </div>
+        <div class="chart-container card">
+            <h3>Parts Usage</h3>
+            <canvas id="partsChart"></canvas>
+        </div>
+        <div class="chart-container card">
+            <h3>Peak Days</h3>
+            <canvas id="peakDaysChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}

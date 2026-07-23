@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Add New Part{% endblock %}
+{% block content %}
+<div class="container">
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('inventory') }}" class="btn-ghost">&larr; Back to Inventory</a>
+    </div>
+    <h2>Add New Part</h2>
+    
+    <div class="card">
+        <form action="{{ url_for('add_part') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-group">
+                <label>Part Name</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Category</label>
+                <select name="category" class="form-control" required>
+                    <option value="Brakes">Brakes</option>
+                    <option value="Engine">Engine</option>
+                    <option value="Electrical">Electrical</option>
+                    <option value="Filters">Filters</option>
+                    <option value="Fluids">Fluids</option>
+                    <option value="Body">Body</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" name="quantity" class="form-control" min="0" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Unit Price (&#8377;)</label>
+                <input type="number" name="unit_price" class="form-control" min="0" step="0.01" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Low Stock Threshold</label>
+                <input type="number" name="threshold" class="form-control" min="1" value="5" required>
+            </div>
+            
+            <button type="submit" class="btn-primary">Add Part</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Find Your Garage - GarageConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header mb-4">
+        <h1>Find Your Garage</h1>
+        <p class="text-muted">Discover and book top-rated garages near you.</p>
+    </div>
+
+    <div class="search-bar card p-3 mb-4">
+        <form method="GET" action="{{ url_for('garages') }}" class="flex-center" style="gap: 15px;">
+            <div class="form-group flex-fill mb-0">
+                <input type="text" name="search" class="form-control" placeholder="Search garages..." value="{{ search|default('') }}">
+            </div>
+            <div class="form-group mb-0">
+                <select name="city" class="form-control">
+                    <option value="">All Cities</option>
+                    {% for city in cities %}
+                    <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-primary">Search</button>
+        </form>
+    </div>
+
+    <div class="mb-4">
+        <p class="text-muted">Showing {{ garages|length }} garages</p>
+    </div>
+
+    {% if garages %}
+    <div class="grid-3" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+        {% for garage in garages %}
+        <div class="card garage-card p-4" style="display: flex; flex-direction: column;">
+            <h3 class="mb-2">{{ garage.name }}</h3>
+            <div class="stars mb-2" style="font-size: 1.1rem; color: #ffc107;">
+                ★ {{ garage.rating|default('0.0') }} <span class="text-muted text-sm" style="color: #6c757d;">({{ garage.review_count|default(0) }} reviews)</span>
+            </div>
+            <div class="location mb-3 text-muted text-sm">
+                <i class="fa fa-map-marker-alt"></i> {{ garage.address }}, {{ garage.city }}
+            </div>
+            <div class="services mb-3" style="display: flex; flex-wrap: wrap; gap: 5px;">
+                {% for service in garage.services[:4] %}
+                <span class="badge-secondary px-2 py-1" style="border-radius: 12px; font-size: 0.8rem; background: #e9ecef; color: #495057;">{{ service }}</span>
+                {% endfor %}
+                {% if garage.services|length > 4 %}
+                <span class="badge-secondary px-2 py-1" style="border-radius: 12px; font-size: 0.8rem; background: #e9ecef; color: #495057;">+{{ garage.services|length - 4 }} more</span>
+                {% endif %}
+            </div>
+            <div class="operating-hours mb-3 text-sm text-muted">
+                <i class="fa fa-clock"></i> {{ garage.operating_hours|default('9:00 AM - 6:00 PM') }}
+            </div>
+            <div class="mb-4 text-sm text-muted">
+                <span class="badge-ghost px-2 py-1" style="border: 1px solid #dee2e6; border-radius: 4px;">Commission: {{ garage.commission_rate|default('10%') }}</span>
+            </div>
+            <div class="flex-between mt-auto" style="display: flex; gap: 10px;">
+                <a href="{{ url_for('garage_detail', id=garage._id) }}" class="btn-secondary" style="flex: 1; text-align: center;">View Details</a>
+                <a href="{{ url_for('book_repair', garage_id=garage._id) }}" class="btn-primary" style="flex: 1; text-align: center;">Book Now</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state text-center card p-5 mt-4">
+        <div class="illustration mb-4" style="font-size: 4rem;">🔍</div>
+        <h3>No garages found</h3>
+        <p class="text-muted mb-4">Try adjusting your search criteria or explore other locations.</p>
+        <a href="{{ url_for('garages') }}" class="btn-secondary">Clear Filters</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

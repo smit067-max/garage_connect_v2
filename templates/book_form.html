@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Repair at {{ garage.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header mb-5 text-center">
+        <h1>Book a Repair at {{ garage.name }}</h1>
+        <p class="text-muted">Fill out the details below and get an AI-powered diagnosis for your vehicle problem.</p>
+    </div>
+
+    <div class="grid-2" style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 30px; align-items: flex-start;">
+        <!-- LEFT COLUMN - Booking Form -->
+        <div class="card p-5">
+            <form method="POST" action="{{ url_for('book_repair', garage_id=garage._id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <h3 class="mb-4" style="border-bottom: 1px solid #eee; padding-bottom: 10px;">Vehicle Information</h3>
+                
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold mb-2 d-block">Make</label>
+                    <select name="make" class="form-control" style="width: 100%; padding: 10px;" required>
+                        <option value="">Select Make...</option>
+                        <option value="Maruti">Maruti</option>
+                        <option value="Hyundai">Hyundai</option>
+                        <option value="Tata">Tata</option>
+                        <option value="Honda">Honda</option>
+                        <option value="Toyota">Toyota</option>
+                        <option value="Mahindra">Mahindra</option>
+                        <option value="Kia">Kia</option>
+                        <option value="MG">MG</option>
+                        <option value="Skoda">Skoda</option>
+                        <option value="Volkswagen">Volkswagen</option>
+                        <option value="BMW">BMW</option>
+                        <option value="Mercedes">Mercedes</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;" class="mb-3">
+                    <div class="form-group">
+                        <label class="font-weight-bold mb-2 d-block">Model</label>
+                        <input type="text" name="model" class="form-control" style="width: 100%; padding: 10px;" placeholder="e.g. Swift, City" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold mb-2 d-block">Year</label>
+                        <input type="number" name="year" class="form-control" style="width: 100%; padding: 10px;" min="2000" max="2026" placeholder="2020" required>
+                    </div>
+                </div>
+
+                <div class="form-group mb-5">
+                    <label class="font-weight-bold mb-2 d-block">Registration Number</label>
+                    <input type="text" name="registration_number" class="form-control" style="width: 100%; padding: 10px;" placeholder="HR26AB1234" required>
+                </div>
+
+                <h3 class="mb-4" style="border-bottom: 1px solid #eee; padding-bottom: 10px;">Service Details</h3>
+                
+                <div class="form-group mb-4">
+                    <label class="font-weight-bold mb-2 d-block">Problem Description</label>
+                    <textarea name="problem_description" id="problem-description" class="form-control" style="width: 100%; padding: 10px; resize: vertical;" rows="4" placeholder="Describe the problem you're experiencing in detail..." required></textarea>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="font-weight-bold mb-2 d-block">Service Type</label>
+                    <select name="service_type" id="service-type" class="form-control" style="width: 100%; padding: 10px;" required>
+                        <option value="">Select a service...</option>
+                        {% for service in services %}
+                        <option value="{{ service }}">{{ service }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group mb-5">
+                    <label class="font-weight-bold mb-2 d-block">Scheduled Date</label>
+                    <input type="date" name="scheduled_date" id="scheduled-date" class="form-control" style="width: 100%; padding: 10px;" required>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold;">Confirm Booking</button>
+            </form>
+        </div>
+
+        <!-- RIGHT COLUMN - AI Diagnosis Panel -->
+        <div class="card p-0 ai-panel" style="border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; position: sticky; top: 20px;">
+            <div class="ai-header" style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); padding: 20px; color: white;">
+                <h3 class="mb-0" style="display: flex; align-items: center; gap: 10px; color: #333;">
+                    <span style="font-size: 1.5rem;">🤖</span> AI Diagnosis
+                </h3>
+            </div>
+            
+            <div class="p-4">
+                <div id="ai-default-state" class="text-center py-5">
+                    <p class="text-muted" style="font-size: 1.1rem; line-height: 1.6;">Start typing your problem description on the left to get an AI-powered diagnosis and service recommendation...</p>
+                </div>
+                
+                <div id="ai-loading-state" class="text-center py-5" style="display: none;">
+                    <div class="pulse-animation mb-3" style="font-size: 3rem;">🧠</div>
+                    <p class="font-weight-bold text-muted">Analyzing problem...</p>
+                </div>
+
+                <div id="ai-result-state" style="display: none;">
+                    <div class="mb-4 p-3" style="background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                        <p class="text-muted mb-1 text-sm text-uppercase font-weight-bold">Predicted Service</p>
+                        <h4 id="ai-service" class="mb-0 text-primary"></h4>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-muted mb-2 text-sm text-uppercase font-weight-bold">Confidence</p>
+                        <div style="background: #e9ecef; border-radius: 10px; height: 12px; overflow: hidden;">
+                            <div id="ai-confidence-bar" style="background: linear-gradient(90deg, #007bff, #00d2ff); height: 100%; width: 0%; transition: width 0.8s ease-in-out;"></div>
+                        </div>
+                        <div class="flex-between mt-1">
+                            <small class="text-muted">Low</small>
+                            <small id="ai-confidence" class="font-weight-bold"></small>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <p class="text-muted mb-2 text-sm text-uppercase font-weight-bold">Urgency</p>
+                        <span id="ai-urgency" style="padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <p class="text-muted mb-2 text-sm text-uppercase font-weight-bold">Keywords Matched</p>
+                        <div id="ai-keywords" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                    </div>
+
+                    <button type="button" id="use-suggestion-btn" class="btn-secondary" style="width: 100%; padding: 12px; font-weight: bold; background: #f8f9fa; border: 2px solid #007bff; color: #007bff;">
+                        Use This Suggestion
+                    </button>
+                </div>
+                
+                <div class="mt-4 text-center border-top pt-3">
+                    <small class="text-muted" style="font-size: 0.8rem;"><em>* AI suggestions are for guidance only and do not replace professional physical inspection.</em></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pulse-animation { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 
+        0% { transform: scale(1); opacity: 1; } 
+        50% { transform: scale(1.15); opacity: 0.6; } 
+        100% { transform: scale(1); opacity: 1; } 
+    }
+    .badge-high { background-color: #dc3545; color: white; }
+    .badge-medium { background-color: #ffc107; color: #333; }
+    .badge-low { background-color: #28a745; color: white; }
+</style>
+
+<script>
+    document.getElementById('scheduled-date').min = new Date().toISOString().split("T")[0];
+
+    const problemInput = document.getElementById('problem-description');
+    let timeout = null;
+
+    problemInput.addEventListener('input', function() {
+        clearTimeout(timeout);
+        const text = this.value.trim();
+        
+        if (text.length < 15) {
+            document.getElementById('ai-default-state').style.display = 'block';
+            document.getElementById('ai-loading-state').style.display = 'none';
+            document.getElementById('ai-result-state').style.display = 'none';
+            document.querySelector('.ai-panel').style.boxShadow = 'none';
+            return;
+        }
+
+        document.getElementById('ai-default-state').style.display = 'none';
+        document.getElementById('ai-loading-state').style.display = 'block';
+        document.getElementById('ai-result-state').style.display = 'none';
+        document.querySelector('.ai-panel').style.boxShadow = '0 0 15px rgba(0,123,255,0.2)';
+
+        timeout = setTimeout(() => {
+            fetch("{{ url_for('api_diagnose') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ description: text })
+            })
+            .then(res => {
+                if(!res.ok) throw new Error('API Error');
+                return res.json();
+            })
+            .then(data => {
+                document.getElementById('ai-loading-state').style.display = 'none';
+                document.getElementById('ai-result-state').style.display = 'block';
+                
+                document.getElementById('ai-service').textContent = data.service || 'General Diagnosis';
+                
+                setTimeout(() => {
+                    document.getElementById('ai-confidence-bar').style.width = (data.confidence || 50) + '%';
+                }, 100);
+                document.getElementById('ai-confidence').textContent = (data.confidence || 50) + '%';
+                
+                const urgencyBadge = document.getElementById('ai-urgency');
+                urgencyBadge.textContent = data.urgency || 'Medium';
+                urgencyBadge.className = '';
+                if(data.urgency === 'High') urgencyBadge.classList.add('badge-high');
+                else if(data.urgency === 'Low') urgencyBadge.classList.add('badge-low');
+                else urgencyBadge.classList.add('badge-medium');
+
+                const kwContainer = document.getElementById('ai-keywords');
+                kwContainer.innerHTML = '';
+                (data.keywords || []).forEach(kw => {
+                    kwContainer.innerHTML += `<span style="background: #e9ecef; color: #495057; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">${kw}</span>`;
+                });
+
+                document.getElementById('use-suggestion-btn').onclick = function() {
+                    const select = document.getElementById('service-type');
+                    for(let i=0; i<select.options.length; i++){
+                        if(select.options[i].value === data.service || select.options[i].text === data.service) {
+                            select.selectedIndex = i;
+                            
+                            // Visual feedback
+                            this.textContent = 'Selected ✓';
+                            this.style.background = '#28a745';
+                            this.style.borderColor = '#28a745';
+                            this.style.color = 'white';
+                            
+                            select.style.boxShadow = '0 0 0 0.2rem rgba(40, 167, 69, 0.25)';
+                            select.style.borderColor = '#28a745';
+                            
+                            setTimeout(() => {
+                                this.textContent = 'Use This Suggestion';
+                                this.style.background = '#f8f9fa';
+                                this.style.borderColor = '#007bff';
+                                this.style.color = '#007bff';
+                                select.style.boxShadow = 'none';
+                                select.style.borderColor = '#ced4da';
+                            }, 2000);
+                            break;
+                        }
+                    }
+                };
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('ai-default-state').style.display = 'block';
+                document.getElementById('ai-loading-state').style.display = 'none';
+            });
+        }, 1200); // 1.2s debounce + delay for effect
+    });
+</script>
+{% endblock %}

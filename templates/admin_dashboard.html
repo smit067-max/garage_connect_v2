@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="container">
+    <h2>Admin Dashboard <span class="badge-completed">Admin</span></h2>
+
+    <div class="dashboard-grid grid-4" style="margin-bottom: 30px;">
+        <div class="kpi-card" style="border-left: 4px solid orange;">
+            <i class="fa fa-rupee-sign"></i>
+            <span class="kpi-value">&#8377;{{ total_commission }}</span>
+            <span class="kpi-label">Total Commission</span>
+        </div>
+        <div class="kpi-card" style="border-left: 4px solid teal;">
+            <i class="fa fa-calendar"></i>
+            <span class="kpi-value">&#8377;{{ monthly_commission }}</span>
+            <span class="kpi-label">Monthly Commission</span>
+        </div>
+        <div class="kpi-card" style="border-left: 4px solid green;">
+            <i class="fa fa-warehouse"></i>
+            <span class="kpi-value">{{ approved_garages|length }}</span>
+            <span class="kpi-label">Active Garages</span>
+        </div>
+        <div class="kpi-card" style="border-left: 4px solid yellow;">
+            <i class="fa fa-clock"></i>
+            <span class="kpi-value">{{ pending_garages|length }}</span>
+            <span class="kpi-label">Pending Approvals</span>
+        </div>
+    </div>
+
+    {% if pending_garages %}
+    <div style="margin-bottom: 30px;">
+        <h3>Pending Garage Approvals</h3>
+        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>Garage Name</th>
+                    <th>Owner</th>
+                    <th>City</th>
+                    <th>Services</th>
+                    <th>Date Submitted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for garage in pending_garages %}
+                <tr>
+                    <td>{{ garage.name }}</td>
+                    <td>{{ garage.owner.name }}</td>
+                    <td>{{ garage.city }}</td>
+                    <td>{{ garage.services|length }} services</td>
+                    <td>{{ garage.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <form action="{{ url_for('approve_garage', garage_id=garage._id) }}" method="POST" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-primary" style="padding: 2px 10px;">Approve</button>
+                        </form>
+                        <form action="{{ url_for('reject_garage', garage_id=garage._id) }}" method="POST" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-danger" style="padding: 2px 10px;">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if low_stock_all %}
+    <div class="card" style="border-left: 4px solid red; background-color: #fff3f3; margin-bottom: 30px;">
+        <h4><i class="fa fa-exclamation-triangle"></i> {{ low_stock_all|length }} items across garages are running low</h4>
+        <table class="data-table" style="width: 100%; margin-top: 10px;">
+            <thead>
+                <tr>
+                    <th>Part Name</th>
+                    <th>Garage</th>
+                    <th>Category</th>
+                    <th>Current Stock</th>
+                    <th>Threshold</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in low_stock_all %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.garage_name }}</td>
+                    <td>{{ item.category }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.threshold }}</td>
+                    <td>
+                        {% if item.quantity == 0 %}
+                        <span class="stock-critical"><span style="color:red;">&#9679;</span> Out of Stock</span>
+                        {% else %}
+                        <span class="stock-warning"><span style="color:orange;">&#9679;</span> Low Stock</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="grid-2">
+        <div>
+            <h3>Recent Bookings</h3>
+            {% if recent_bookings %}
+            <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Garage</th>
+                        <th>Service</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in recent_bookings %}
+                    <tr>
+                        <td>{{ booking.scheduled_date }}</td>
+                        <td>{{ booking.customer_name }}</td>
+                        <td>{{ booking.garage_name }}</td>
+                        <td>{{ booking.service_type }}</td>
+                        <td>&#8377;{{ booking.total_price or '-' }}</td>
+                        <td><span class="badge-{{ booking.status|lower }}">{{ booking.status }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No recent bookings.</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <h3>Active Garages</h3>
+            {% if approved_garages %}
+            <div class="dashboard-grid">
+                {% for garage in approved_garages %}
+                <div class="card" style="margin-bottom: 10px;">
+                    <h4>{{ garage.name }} <span class="stars">{{ garage.rating }} &#9733;</span></h4>
+                    <p><strong>Owner:</strong> {{ garage.owner_name }}</p>
+                    <p><strong>City:</strong> {{ garage.city }}</p>
+                    <p><strong>Total Bookings:</strong> {{ garage.total_bookings }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No active garages.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

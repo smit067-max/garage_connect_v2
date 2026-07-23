@@ -1,0 +1,42 @@
+# GarageConnect v2 — Local Development with Docker Compose
+# Usage: docker compose up -d
+# Access: http://localhost:5000
+
+services:
+  # MongoDB Database
+  mongo:
+    image: mongo:7.0
+    container_name: gc_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: garage_connect
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Flask Web Application
+  web:
+    build: .
+    container_name: gc_web
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/garage_connect
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - FLASK_ENV=development
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - .:/app  # Live reload during development
+
+volumes:
+  mongo_data:
+    name: gc_mongo_data

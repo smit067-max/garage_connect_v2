@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="auth-page" style="min-height: calc(100vh - 80px); display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); padding: 2rem;">
+    <div class="card" style="width: 100%; max-width: 450px; padding: 2.5rem; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+        
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 2.5rem; color: #ea580c; margin-bottom: 1rem;">
+                <i class="fas fa-car-side"></i>
+            </div>
+            <h1 style="font-family: 'Outfit', sans-serif; font-size: 2rem; margin-bottom: 0.5rem;">Welcome Back</h1>
+            <p style="color: #94a3b8;">Sign in to your account</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('login') }}">
+            {{ csrf_token() if csrf_token else '<input type="hidden" name="csrf_token" value="">'|safe }}
+            
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Username</label>
+                <div style="position: relative;">
+                    <i class="fas fa-user" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #64748b;"></i>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" required style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password</label>
+                <div style="position: relative;">
+                    <i class="fas fa-lock" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #64748b;"></i>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required style="width: 100%; padding: 0.75rem 2.5rem 0.75rem 2.5rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+                    <i class="fas fa-eye" id="togglePassword" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #64748b; cursor: pointer;"></i>
+                </div>
+            </div>
+            
+            <div class="flex-between" style="margin-bottom: 2rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" name="remember" style="accent-color: #ea580c;">
+                    <span style="color: #94a3b8; font-size: 0.9rem;">Remember me</span>
+                </label>
+                <a href="#" style="color: #ea580c; font-size: 0.9rem; text-decoration: none;">Forgot Password?</a>
+            </div>
+            
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem; border-radius: 0.5rem;">Sign In</button>
+        </form>
+        
+        <div style="margin: 2rem 0; display: flex; align-items: center; text-align: center; color: #64748b;">
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+            <span style="padding: 0 1rem; font-size: 0.9rem;">OR</span>
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+        </div>
+        
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <span style="color: #94a3b8;">Don't have an account?</span>
+            <a href="{{ url_for('register') }}" style="color: #ea580c; text-decoration: none; font-weight: 500; margin-left: 0.5rem;">Sign Up</a>
+        </div>
+        
+        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 0.5rem; text-align: left; font-size: 0.8rem; color: #94a3b8; border: 1px dashed rgba(255,255,255,0.1);">
+            <p style="margin-bottom: 0.5rem; font-weight: 600; color: #fff;">Demo Accounts:</p>
+            <ul style="list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem;">
+                <li><strong>Admin:</strong> admin / admin123</li>
+                <li><strong>Garage:</strong> garage1 / garage123</li>
+                <li><strong>Customer:</strong> customer1 / pass123</li>
+            </ul>
+        </div>
+        
+    </div>
+</div>
+
+<script>
+    document.getElementById('togglePassword').addEventListener('click', function (e) {
+        const password = document.getElementById('password');
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        this.classList.toggle('fa-eye-slash');
+    });
+</script>
+{% endblock %}

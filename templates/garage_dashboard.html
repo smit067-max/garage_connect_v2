@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}{{ garage.name }} Dashboard{% endblock %}
+{% block content %}
+<div class="container">
+    <h2>{{ garage.name }} Dashboard <span class="stars">{{ stats.avg_rating }} &#9733;</span></h2>
+
+    <div class="dashboard-grid grid-4">
+        <div class="kpi-card" style="border-left: 4px solid orange;">
+            <i class="fa fa-briefcase"></i>
+            <span class="kpi-value">{{ stats.active_jobs }}</span>
+            <span class="kpi-label">Active Jobs</span>
+        </div>
+        <div class="kpi-card" style="border-left: 4px solid green;">
+            <i class="fa fa-check-circle"></i>
+            <span class="kpi-value">{{ stats.completed_today }}</span>
+            <span class="kpi-label">Completed Today</span>
+        </div>
+        <div class="kpi-card" style="border-left: 4px solid teal;">
+            <i class="fa fa-rupee-sign"></i>
+            <span class="kpi-value">&#8377;{{ stats.monthly_revenue }}</span>
+            <span class="kpi-label">Monthly Revenue</span>
+        </div>
+        <div class="kpi-card" style="border-left: 4px solid yellow;">
+            <i class="fa fa-star"></i>
+            <span class="kpi-value">{{ stats.avg_rating }}</span>
+            <span class="kpi-label">Avg Rating</span>
+        </div>
+    </div>
+
+    <div class="flex-between" style="margin-top: 20px; margin-bottom: 20px;">
+        <div>
+            <a href="{{ url_for('garage_analytics') }}" class="btn-secondary">View Analytics</a>
+            <a href="{{ url_for('inventory') }}" class="btn-secondary">Manage Inventory</a>
+        </div>
+        {% if not garage %}
+            <a href="{{ url_for('register_garage') }}" class="btn-primary">Register Garage</a>
+        {% endif %}
+    </div>
+
+    {% if low_stock_items %}
+    <div class="card" style="border-left: 4px solid red; background-color: #fff3f3;">
+        <h4><i class="fa fa-exclamation-triangle"></i> Low Stock Alert: {{ low_stock_items|length }} items need restocking</h4>
+        <ul>
+            {% for item in low_stock_items %}
+            <li>{{ item.name }} (Quantity: {{ item.quantity }})</li>
+            {% endfor %}
+        </ul>
+        <a href="{{ url_for('inventory') }}">Go to Inventory</a>
+    </div>
+    {% endif %}
+
+    <div class="job-queue">
+        <h3>Job Queue</h3>
+        <div class="tabs">
+            <button class="active">All</button>
+            <button>Pending</button>
+            <button>Accepted</button>
+            <button>In Progress</button>
+            <button>Completed</button>
+        </div>
+
+        {% if bookings %}
+            {% for booking in bookings %}
+            <div class="booking-card card">
+                <h4>{{ booking.customer_name }} - {{ booking.vehicle.make }} {{ booking.vehicle.model }} ({{ booking.vehicle.year }})</h4>
+                <p><strong>Service:</strong> {{ booking.service_type }}</p>
+                <p><strong>Problem:</strong> {{ booking.problem_description|truncate(50) }}</p>
+                <p><strong>Date:</strong> {{ booking.scheduled_date }}</p>
+                <span class="badge-{{ booking.status|lower }}">{{ booking.status }}</span>
+
+                <div style="margin-top: 10px;">
+                    {% if booking.status == 'Pending' %}
+                    <form action="{{ url_for('accept_booking', id=booking._id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-primary">Accept</button>
+                    </form>
+                    <form action="#" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-danger">Reject</button>
+                    </form>
+                    {% elif booking.status == 'Accepted' %}
+                    <form action="{{ url_for('start_booking', id=booking._id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-primary">Start Work</button>
+                    </form>
+                    {% elif booking.status == 'In Progress' %}
+                    <a href="{{ url_for('complete_booking', id=booking._id) }}" class="btn-primary">Complete Job</a>
+                    {% elif booking.status == 'Completed' %}
+                    <p><strong>Price:</strong> &#8377;{{ booking.total_price }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No bookings found.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
