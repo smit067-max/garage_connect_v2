@@ -154,7 +154,7 @@ def book_repair(garage_id):
         flash("Booking created successfully.", "success")
         return redirect(url_for('my_bookings'))
         
-    return render_template('book_repair.html', garage=garage, services=garage.get('services', []))
+    return render_template('book_form.html', garage=garage, services=garage.get('services', []))
 
 @app.route('/my-bookings')
 @login_required
@@ -243,7 +243,7 @@ def complete_booking(id):
         flash("Booking completed.", "success")
         return redirect(url_for('garage_dashboard'))
         
-    return render_template('complete_booking.html', booking=booking, inventory_items=inventory_items)
+    return render_template('complete_job.html', booking=booking, inventory_items=inventory_items)
 
 @app.route('/register-garage', methods=['GET', 'POST'])
 @login_required
@@ -261,7 +261,7 @@ def register_garage():
         flash("Garage registered and pending approval.", "success")
         return redirect(url_for('garage_dashboard'))
         
-    return render_template('register_garage.html')
+    return render_template('garage_form.html')
 
 @app.route('/inventory')
 @login_required
@@ -287,7 +287,7 @@ def add_part():
         flash("Item added.", "success")
         return redirect(url_for('inventory'))
         
-    return render_template('add_part.html')
+    return render_template('part_form.html')
 
 @app.route('/inventory/<id>/restock', methods=['POST'])
 @login_required
